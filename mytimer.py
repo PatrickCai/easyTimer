@@ -216,7 +216,7 @@ class Rev_Frame(wx.Frame):
     def show_history(self,event):
         #处理time_list.xml
         #1.将属于今天的元素找出
-        tree=etree.parse(os.path.normcase(unicode("F:/历史记录/近期/【项目】小项目/定时器/time_list.xml")))
+        tree=etree.parse(os.path.normcase(unicode("F:/历史记录/近期/【项目】小项目/easyTimer/time_list.xml")))
         today_date=datetime.now().strftime("%Y-%m-%d")
         # ONLY FOR DEBUG
         # today_date="2013-10-16"
@@ -247,7 +247,7 @@ class Rev_Frame(wx.Frame):
     #将info中的任务名字和时间，还有转换算成的起始时间计入time_list.xml中。试用了lxml中etree生成xml
     #格式、“<workList wlID="1"><tag>学习</tag><date>2013-10-12</date><from>15:10</from><to>15:30</to><duration>20 分钟</duration></workList>   
     def time_log(self,info):
-        tree=etree.parse(os.path.normcase(unicode("F:/历史记录/近期/【项目】小项目/定时器/time_list.xml")))
+        tree=etree.parse(os.path.normcase(unicode("F:/历史记录/近期/【项目】小项目/easyTimer/time_list.xml")))
         root=tree.getroot()
         #确定编号wlID
         try:
@@ -271,7 +271,7 @@ class Rev_Frame(wx.Frame):
         w_duration=etree.SubElement(work_list,u"duration")
         w_duration.text=u"%s 分钟"%info["mins"]
         #写入列表
-        tree.write(open(os.path.normcase(unicode("F:/历史记录/近期/【项目】小项目/定时器/time_list.xml")),"r+"),encoding="utf-8")
+        tree.write(open(os.path.normcase(unicode("F:/历史记录/近期/【项目】小项目/easyTimer/time_list.xml")),"r+"),encoding="utf-8")
     #显示还有多少时间，在choose_evt函数中调用
     def count_time(self,event):
         self.remaining_time.SetLabel(u"还剩%s minutes"%str(self.rm_time-1))
