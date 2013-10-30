@@ -51,6 +51,10 @@ class Rev_Frame(wx.Frame):
         self.choose_min(60)
         self.Bind(wx.EVT_HOTKEY,lambda event:self.choose_evt(event,60),id=self.hotKeyId)
 
+        #十五分钟
+        self.choose_min(15)
+        self.Bind(wx.EVT_HOTKEY,lambda event:self.choose_evt(event,15),id=self.hotKeyId)
+
         #任意倒计时开始F7开始（调用start_random_timer函数），F8结束(调用end_random_timer函数)
         self.shift_F7()
         self.Bind(wx.EVT_HOTKEY,self.start_random_timer,id=self.hotKeyId)
@@ -70,13 +74,16 @@ class Rev_Frame(wx.Frame):
         self.show_history_button=wx.Button(panel,label=u"显示历史",pos=(7,7),size=(60,25))
         self.Bind(wx.EVT_BUTTON,self.show_history,self.show_history_button)
 
-
+        #到换班时间自动提醒,每隔一分钟检查
+        self.change_alert=wx.Timer(self,wx.NewId())
+        self.change_alert.Start(1000*60*1,oneShot=False)        
+        self.Bind(wx.EVT_TIMER,self.shift_alert,self.change_alert)
 
 
     '''正常倒计时'''
     #按下快捷键，确定要倒计的时间
     def choose_min(self,mins):
-        min_dic={10:win32con.VK_F1,20:win32con.VK_F2,30:win32con.VK_F3,40:win32con.VK_F4,50:win32con.VK_F5,60:win32con.VK_F6}#时间选择列表
+        min_dic={10:win32con.VK_F1,20:win32con.VK_F2,30:win32con.VK_F3,40:win32con.VK_F4,50:win32con.VK_F5,60:win32con.VK_F6,15:win32con.VK_F9}#时间选择列表
         self.hotKeyId=mins*10
         self.RegisterHotKey(
             self.hotKeyId,
@@ -125,6 +132,8 @@ class Rev_Frame(wx.Frame):
             info={"message":message,"mins":mins}#将完成信息和完成的时间放在info上
             self.time_log(info)#将信息记录在xml中
 
+        #3将历史记录时时显示
+        self.show_history(event)
 
     '''任意倒计时'''
     #从未知时间开始
@@ -182,7 +191,8 @@ class Rev_Frame(wx.Frame):
             info={"message":message,"mins":inteverval}
             self.time_log(info)
 
-
+        #4.刷新历史记录
+        self.show_history(event)
     '''终止任务'''
     #销毁记录或者记录时间
     def shift_F10(self):
@@ -219,7 +229,7 @@ class Rev_Frame(wx.Frame):
         tree=etree.parse(os.path.normcase(unicode("F:/历史记录/近期/【项目】小项目/定时器/time_list.xml")))
         today_date=datetime.now().strftime("%Y-%m-%d")
         # ONLY FOR DEBUG
-        # today_date="2013-10-16"
+        # today_date="2013-10-30"
         today_elements=tree.xpath('//workList[date="%s"]'%(today_date))
         #2.将所有的标签分类
         all_list=[]
@@ -291,6 +301,24 @@ class Rev_Frame(wx.Frame):
             if(retcode==wx.ID_OK):
                 self.warn_box.Destroy()
                 self.notification_bar.SetLabel(u"当前没有任何任务")
+                
+    #到了换班时间提醒
+    def shift_alert(self,event):
+        #decide which event should be excuted according to the time
+        def excute_event(event_label):
+            self.shift_box=wx.MessageDialog(None,event_label,caption="Warn",style=wx.OK|wx.CENTRE|wx.STAY_ON_TOP)
+            retcode=self.shift_box.ShowModal()
+            if(retcode==wx.ID_OK):
+                self.shift_box.Destroy()
+
+        #获取现在时间判断是不是到了点
+        hour_min=int(datetime.now().strftime('%H%M'))
+        min_event_dic={940:u'请处理杂事!',1330:u'请睡午觉!',1420:u'请开始看书!',2015:u'复习时间到!'}
+        try:
+            excute_event(min_event_dic[hour_min])
+        except KeyError:
+            #if the time right now is not on the 'min_event_dic': ignore it
+            pass
 
 class MessageDialog(wx.Dialog):
     def __init__(self,message,title):
